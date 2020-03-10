@@ -1,0 +1,17 @@
+{
+    "superAdmin": [
+        "/api/v1/users",
+        "/api/v1/userby",
+        "/api/v1/usersbyname"
+    ],
+    "admin": [
+        "/api/v1/users",
+        "/api/v1/userby",
+        "/api/v1/usersbyname"
+    ],
+
+    "user": [
+        "/api/v1/userby",
+        "/api/v1/users"
+    ]
+}
