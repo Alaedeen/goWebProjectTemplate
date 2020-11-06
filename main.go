@@ -12,19 +12,19 @@ import (
 	"github.com/Alaedeen/goWebProjectTemplate/repository"
 	router "github.com/Alaedeen/goWebProjectTemplate/router"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/rs/cors"
 	"github.com/spf13/viper"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func main() {
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost", "http://localhost:8080"},
+		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
-		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"accept", "Authorization", "Content-Type"},
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PUT", "HEAD"},
-		// Enable Debugging for testing, consider disabling in production
+		// Enable Debugging for testing, consider disablin in production
 		Debug: true,
 	})
 	viper.SetConfigName("config")
@@ -44,13 +44,12 @@ func main() {
 	DataBase := configuration.Database.DataBase
 	Charset := configuration.Database.Charset
 	ParseTime := configuration.Database.ParseTime
-	db, err := gorm.Open("mysql", UserName+":"+Password+"@/"+DataBase+"?charset="+
-		Charset+"&parseTime="+ParseTime+"&loc=Local")
+	dsn := UserName + ":" + Password + "@/" + DataBase + "?charset=" + Charset + "&parseTime=" + ParseTime + "&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	defer db.Close()
 	db.AutoMigrate(&models.User{})
 
 	userRepo := repository.UserRepo{db}

@@ -6,13 +6,13 @@ import (
 	"strings"
 
 	models "github.com/Alaedeen/goWebProjectTemplate/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // UserRepository ...
 type UserRepository interface {
-	GetUsers(role string, offset int, limit int) ([]models.User, error, int)
-	GetUsersByName(name string, role string, offset int, limit int) ([]models.User, error, int)
+	GetUsers(role string, offset int, limit int) ([]models.User, error, int64)
+	GetUsersByName(name string, role string, offset int, limit int) ([]models.User, error, int64)
 	GetUser(id uint) (models.User, error)
 	GetUserBy(keys []string, values []interface{}) (models.User, error)
 	CreateUser(u models.User) (models.User, error)
@@ -26,10 +26,10 @@ type UserRepo struct {
 }
 
 // GetUsers ...
-func (r *UserRepo) GetUsers(role string, offset int, limit int) ([]models.User, error, int) {
+func (r *UserRepo) GetUsers(role string, offset int, limit int) ([]models.User, error, int64) {
 	var Users []models.User
 	var User models.User
-	var count int
+	var count int64
 	var err error
 	if role == "user" {
 		err = r.Db.Where("admin = ?", false).Offset(offset).Limit(limit).Find(&Users).Error
@@ -46,10 +46,10 @@ func (r *UserRepo) GetUsers(role string, offset int, limit int) ([]models.User, 
 }
 
 // GetUsersByName ...
-func (r *UserRepo) GetUsersByName(name string, role string, offset int, limit int) ([]models.User, error, int) {
+func (r *UserRepo) GetUsersByName(name string, role string, offset int, limit int) ([]models.User, error, int64) {
 	var Users []models.User
 	var User models.User
-	var count int
+	var count int64
 	var err error
 	if role == "user" {
 		err = r.Db.Where("admin = ? AND UPPER(name) LIKE ?", false, "%"+strings.ToUpper(name)+"%").Offset(offset).Limit(limit).Find(&Users).Error
@@ -98,15 +98,17 @@ func (r *UserRepo) GetUserBy(keys []string, values []interface{}) (models.User, 
 func (r *UserRepo) CreateUser(u models.User) (models.User, error) {
 	User := u
 	var user models.User
-	err := r.Db.Where(map[string]interface{}{"name": u.Name}).Find(&user).Error
-	if err == nil {
+	//err := r.Db.Where(map[string]interface{}{"name": u.Name}).Find(&user).Error
+	count := r.Db.Find(&user, "name = ?", u.Name).RowsAffected
+	if count != 0 {
 		return user, errors.New("ERROR: name already used")
 	}
-	err = r.Db.Where(map[string]interface{}{"email": u.Email}).Find(&user).Error
-	if err == nil {
+	//err = r.Db.Where(map[string]interface{}{"email": u.Email}).Find(&user).Error
+	count = r.Db.Find(&user, "email = ?", u.Email).RowsAffected
+	if count != 0 {
 		return user, errors.New("ERROR: mail already used")
 	}
-	err = r.Db.Create(&User).Error
+	err := r.Db.Create(&User).Error
 	return User, err
 }
 
@@ -144,5 +146,3 @@ func (r *UserRepo) UpdateUser(m map[string]interface{}, id uint) error {
 	return err1
 
 }
-
-
